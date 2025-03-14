@@ -41,6 +41,28 @@ for i in range(7):
 all_sprites_list.add(paddle)
 all_sprites_list.add(ball)
 
+pause = False
+
+keys = pygame.key.get_pressed()
+
+def paused():
+    global pause
+    font = pygame.font.Font(None, 74)
+    text = font.render("PAUSE", 1, (255, 255, 255))
+    screen.blit(text, (320, 300))
+    pygame.display.flip()
+
+    while pause:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    pause = False
+            if event.type == pygame.QUIT:
+                pause = False
+                pygame.quit()
+                quit()
+
+
 screen = pygame.display.set_mode(size=(800,600))
 pygame.display.set_caption("Breakout Game")
 
@@ -50,10 +72,13 @@ game = True
 
 while game:
     for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                pause = True
+                paused()
         if event.type == pygame.QUIT:
               game = False
 
-    keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT] or keys[pygame.K_a]:
         paddle.moveLeft(5)
     if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
