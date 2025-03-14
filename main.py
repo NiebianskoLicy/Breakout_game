@@ -43,8 +43,6 @@ all_sprites_list.add(ball)
 
 pause = False
 
-keys = pygame.key.get_pressed()
-
 def paused():
     global pause
     font = pygame.font.Font(None, 74)
@@ -78,6 +76,8 @@ while game:
                 paused()
         if event.type == pygame.QUIT:
               game = False
+
+    keys = pygame.key.get_pressed()
 
     if keys[pygame.K_LEFT] or keys[pygame.K_a]:
         paddle.moveLeft(5)
