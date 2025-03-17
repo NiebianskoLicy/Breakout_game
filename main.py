@@ -4,46 +4,31 @@ from ball import Ball
 from bricks import Brick
 
 pygame.init()
+screen = pygame.display.set_mode(size=(800,600)) # changing window size and title
+pygame.display.set_caption("Breakout Game")
+game_clock = pygame.time.Clock() # method from pygame for adjusting fps
 
-score = 0
-lives = 3
+all_sprites_list = pygame.sprite.Group()  # method from pygame for petter grouping sprites(wall,ball,paddle)
 
-all_sprites_list = pygame.sprite.Group()
-
-paddle = Paddle()
+paddle = Paddle() # paddle object and coordinates
 paddle.rect.x = 350
 paddle.rect.y = 560
 
-ball = Ball()
+ball = Ball() # ball object and coordinates
 ball.rect.x = 345
 ball.rect.y = 195
 
-all_bricks = pygame.sprite.Group()
-for i in range(7):
-    brick = Brick((255,0,0),80,30)
-    brick.rect.x = 60 + i * 100
-    brick.rect.y = 60
-    all_sprites_list.add(brick)
-    all_bricks.add(brick)
-for i in range(7):
-    brick = Brick((255,100,0),80,30)
-    brick.rect.x = 60 + i* 100
-    brick.rect.y = 100
-    all_sprites_list.add(brick)
-    all_bricks.add(brick)
-for i in range(7):
-    brick = Brick((255,255,0),80,30)
-    brick.rect.x = 60 + i* 100
-    brick.rect.y = 140
-    all_sprites_list.add(brick)
-    all_bricks.add(brick)
+all_bricks = Brick((255, 0, 0), 80, 30) # generating bricks (here unnecessary arguments)
+wall = all_bricks.generate_wall() # wall of bricks objects
 
-all_sprites_list.add(paddle)
+all_sprites_list.add(paddle) # adding sprites to group
 all_sprites_list.add(ball)
+all_sprites_list.add(wall)
 
 pause = False
+game = True
 
-def paused():
+def paused(): # function to pause game
     global pause
     font = pygame.font.Font(None, 74)
     text = font.render("PAUSE", 1, (255, 255, 255))
@@ -60,79 +45,40 @@ def paused():
                 pygame.quit()
                 quit()
 
-
-screen = pygame.display.set_mode(size=(800,600))
-pygame.display.set_caption("Breakout Game")
-
-game_clock = pygame.time.Clock()
-
-game = True
-
 while game:
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
+    for event in pygame.event.get(): # recording user actions
+        if event.type == pygame.KEYDOWN: # every clicked key from keyboard
             if event.key == pygame.K_SPACE:
-                pause = True
+                pause = True # pause game
                 paused()
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT: # quit at closing window
               game = False
 
-    keys = pygame.key.get_pressed()
+    keys = pygame.key.get_pressed() # method from pygame, for pressed keys
 
-    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+    if keys[pygame.K_LEFT] or keys[pygame.K_a]: # move left on "a" or "left"
         paddle.moveLeft(5)
-    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+    if keys[pygame.K_RIGHT] or keys[pygame.K_d]: # move right on "d" or "right"
         paddle.moveRight(5)
 
     all_sprites_list.update()
 
-    if ball.rect.x >= 790:
-        ball.velocity[0] = -ball.velocity[0]
-    if ball.rect.x <= 0:
-        ball.velocity[0] = -ball.velocity[0]
-    if ball.rect.y > 590:
-        ball.velocity[1] = -ball.velocity[1]
-        lives -= 1
-        if lives == 0:
-            font = pygame.font.Font(None, 74)
-            text = font.render("GAME OVER", 1, (255,255,255))
-            screen.blit(text, (250,300))
-            pygame.display.flip()
-            pygame.time.wait(3000)
-            game=False
-    if ball.rect.y < 40:
-        ball.velocity[1] = -ball.velocity[1]
+    ball.ball_logic(screen,game) # ball bouncing of walls and losing lives
 
-    if pygame.sprite.collide_mask(ball, paddle):
-        ball.rect.x -= ball.velocity[0]
-        ball.rect.y -= ball.velocity[1]
-        ball.bounce()
+    ball.check_collision(screen, game, ball, wall, paddle) # bouncing ball on collision with brick wall and paddle
 
-    brick_collision_list = pygame.sprite.spritecollide(ball, all_bricks, False)
-    for brick in brick_collision_list:
-        ball.bounce()
-        score += 1
-        brick.kill()
-        if len(all_bricks) == 0:
-            font = pygame.font.Font(None, 74)
-            text = font.render("LEVEL COMPLETE", 1, (255,255,255))
-            screen.blit(text, (200, 300))
-            pygame.display.flip()
-            pygame.time.wait(3000)
-            game = False
+    screen.fill((0, 0, 0)) # filling old record with black color
+    pygame.draw.line(screen,(255,255,255),[0,38],[800,38],2) # line at bottom of the score and lives
 
-    screen.fill((0,0,0))
-    pygame.draw.line(screen,(255,255,255),[0,38],[800,38],2)
-
-    font = pygame.font.Font(None, 34)
-    text = font.render("Score: " + str(score), 1,(255,255,255))
+    font = pygame.font.Font(None, 34) # viewing lives and score
+    text = font.render("Score: " + str(ball.show_score()), 1,(255,255,255))
     screen.blit(text, (20,10))
-    text = font.render("Lives: " + str(lives), 1, (255,255,255))
+    text = font.render("Lives: " + str(ball.show_lives()), 1, (255,255,255))
     screen.blit(text, (650,10))
 
-    all_sprites_list.draw(screen)
-    pygame.display.flip()
-    game_clock.tick(60)
+    all_sprites_list.draw(screen) # drawing ball, wall and paddle
+    pygame.display.flip() # updating entire screen
+    game_clock.tick(60) # adjust fps to 60
 
-pygame.display.quit()
+pygame.display.quit() # quit game at the end
 pygame.quit()
